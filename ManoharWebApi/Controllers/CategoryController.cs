@@ -1,4 +1,5 @@
-﻿using ManoharWebApi.Data;
+﻿using Azure.Storage.Blobs;
+using ManoharWebApi.Data;
 using ManoharWebApi.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -38,13 +39,28 @@ namespace ManoharWebApi.Controllers
             return Ok(await _context.Categories.FirstOrDefaultAsync(x => x.Id == id));
         }
 
+
+
+
         // POST api/<CategoryController>
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Category category)
+        public async Task<IActionResult> Post([FromForm] Category category)
         {
+
+            string connectionString = @"DefaultEndpointsProtocol=https;AccountName=shopifymartapplication;AccountKey=Yp39fujqWao3B7uLdO8bQ3dSrhl5zUaQ9eW+kyB4IDhwfcjbAOGnKgxQSH0hDd2i8H5HpE3lnHQP+ASt00yAbw==;EndpointSuffix=core.windows.net";
+            string containerName = "shopifycartimage";
+
+            BlobContainerClient containerCLient = new BlobContainerClient(connectionString, containerName);
+            BlobClient blobClient = containerCLient.GetBlobClient(category.CategoryImage.FileName);
+            MemoryStream ms = new MemoryStream();
+            await category.CategoryImage.CopyToAsync(ms);
+            ms.Position = 0;
+         await blobClient.UploadAsync(ms);
+            category.CategoryImagePath = blobClient.Uri.AbsoluteUri;
             await _context.Categories.AddAsync(category);
             await _context.SaveChangesAsync();
             return StatusCode(StatusCodes.Status201Created);
+
         }
 
         // PUT api/<CategoryController>/5
@@ -58,7 +74,8 @@ namespace ManoharWebApi.Controllers
             }
            categoryDb.Title = category.Title;
             categoryDb.Description = category.Description;
-           _context.Categories.Update(categoryDb);
+           
+           //                                        _context.Categories.Update(categoryDb);
             await _context.SaveChangesAsync();
             return Ok("Category Updated..");
         }

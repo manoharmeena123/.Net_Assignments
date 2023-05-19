@@ -15,6 +15,7 @@ namespace ManoharWebApi.Data
         public DbSet<Book> Books { get; set; }
         public DbSet<BookCover> BookCovers { get; set; }
         public DbSet<BookWritter> BookWritters { get; set; }
-      
+
+
     }
 }
